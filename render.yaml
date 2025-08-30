@@ -4,7 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -15,10 +15,4 @@ services:
       - key: RENDER
         value: true
       - key: ALLOWED_ORIGINS
-        value: https://your-app-name.onrender.com,http://localhost:8000
-
-databases:
-  - name: messenger-db
-    plan: free
-    databaseName: messenger
-    user: messenger_user
+        value: https://your-app-name.onrender.com
