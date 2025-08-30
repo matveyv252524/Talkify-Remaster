@@ -18,11 +18,18 @@ from dotenv import load_dotenv
 # Загрузка переменных окружения
 load_dotenv()
 
-# Конфигурация - используем переменные окружения Render
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
-SECRET_KEY = os.getenv("SECRET_KEY", secrets.token_hex(32))
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000").split(",")
+# Конфигурация
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
+    # Для PostgreSQL на Render
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+else:
+    # Для локальной разработки - SQLite
+    DATABASE_URL = "sqlite+aiosqlite:///./messenger.db"
+
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key-for-development")
 IS_RENDER = os.getenv("RENDER", "false").lower() == "true"
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:8000").split(",")
 
 # Инициализация FastAPI
 app = FastAPI(title="Messenger", docs_url="/api/docs", redoc_url="/api/redoc")
@@ -36,14 +43,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# База данных - используем asyncpg для PostgreSQL на Render
-if IS_RENDER and "postgresql" in DATABASE_URL:
-    # Для Render используем asyncpg
-    engine = create_async_engine(DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"), echo=True)
-else:
-    # Для локальной разработки используем SQLite
-    engine = create_async_engine("sqlite+aiosqlite:///./messenger.db", echo=True)
-
+# База данных
+engine = create_async_engine(DATABASE_URL, echo=True)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 Base = declarative_base()
 
