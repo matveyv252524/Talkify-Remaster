@@ -18,14 +18,17 @@ from dotenv import load_dotenv
 # Загрузка переменных окружения
 load_dotenv()
 
-# Конфигурация
+# Измените подключение к базе данных
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL and DATABASE_URL.startswith("postgresql://"):
-    # Для PostgreSQL на Render
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+    # Для PostgreSQL на Render используем psycopg2
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
 else:
     # Для локальной разработки - SQLite
     DATABASE_URL = "sqlite+aiosqlite:///./messenger.db"
+
+# Создание движка базы данных
+engine = create_async_engine(DATABASE_URL, echo=True)
 
 SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key-for-development")
 IS_RENDER = os.getenv("RENDER", "false").lower() == "true"
